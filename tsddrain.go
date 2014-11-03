@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -60,20 +61,35 @@ func main() {
 			stats.conns++
 			stats.open++
 
-			scanner := bufio.NewScanner(conn)
+			reader := bufio.NewReader(conn)
 			writer := bufio.NewWriter(conn)
 
-			for scanner.Scan() {
+			for {
 				// extending the deadline on every loop pass seems to be idiomatic, but expensive
 				//conn.SetReadDeadline(time.Now().Add(time.Duration(6000 * time.Millisecond)))
-				event := scanner.Text()
+
+				event, err := reader.ReadString('\n')
+				if err != nil {
+					if err != io.EOF {
+						log.Printf("Unexpected error from %s: %s\n", conn.RemoteAddr().String(), err)
+					}
+					break
+				}
+
+				event = strings.TrimSpace(event)
+
+				// skip empty lines
+				if len(event) == 0 {
+					continue
+				}
+
 				switch {
 				case strings.HasPrefix(event, "put "):
 					stats.events++
 					stats.bytes += int64(len(event))
 					if *outFile != "" {
 						if *outFile == "-" {
-							log.Println(event)
+							log.Print(event)
 						} else {
 							msgChan <- event
 						}
@@ -97,9 +113,6 @@ func main() {
 					stats.unknown++
 				}
 			}
-			if err := scanner.Err(); err != nil {
-				log.Println("Error reading standard input", err)
-			}
 
 		}()
 	}
@@ -122,7 +135,7 @@ func writeFile(msgChan chan string) {
 	for {
 		select {
 		case event := <-msgChan:
-			_, err = fmt.Fprintln(w, event)
+			_, err = fmt.Fprint(w, event)
 			if err != nil {
 				log.Println("Error writing to file", err)
 			}
