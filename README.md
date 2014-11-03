@@ -9,21 +9,20 @@ A sink for TSD traffic using the "raw" TCP protocol.
 
 Output file (`-o`) defaults to "", which will drop the messages on the floor.
 It can be set to "-" (which will write to STDOUT) or a filename.
-The file output is buffered and flushed every flush interval (`-f`).
+The file output is buffered and flushed every flush interval (`-f`) seconds.
 
 Commands accepted over the TCP port are:
-
 * `put` - expects a a regular OpenTSDB datapoint (though no validation is performed).
 * `version` - prints a small version string (expected by tools such as [TCollector](https://github.com/OpenTSDB/tcollector))
 * `stats` - prints some basic statistics.
 * `reset` - resets the stats counters.
 
 ### Stats
-`tsdsink.events` - number of "put" events received since startup
-`tsdsink.bytes` - bytes received in "put" events since startup
-`tsdsink.connections` - total of connections made since startup
-`tsdsink.open` - number of open TCP connections
-`tsdsink.unknown` - number of unknown commands
+* `tsdsink.events` - number of "put" events received since startup
+* `tsdsink.bytes` - bytes received in "put" events since startup
+* `tsdsink.connections` - total of connections made since startup
+* `tsdsink.open` - number of open TCP connections
+* `tsdsink.unknown` - number of unknown commands
 
 These stats can be quickly dumped into a running TSD for graphing:
 ```
